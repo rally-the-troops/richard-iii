@@ -266,54 +266,6 @@ function on_click_card(evt) {
 	send_action('play', c);
 }
 
-function on_button_undo(evt) {
-	send_action('undo');
-}
-
-function on_button_pass(evt) {
-	send_action('pass');
-}
-
-function on_button_end_action_phase(evt) {
-	send_action('end_action_phase');
-}
-
-function on_button_end_supply_phase(evt) {
-	send_action('end_supply_phase');
-}
-
-function on_button_end_political_turn(evt) {
-	send_action('end_political_turn');
-}
-
-function on_button_end_exile_limits(evt) {
-	send_action('end_exile_limits');
-}
-
-function on_button_end_regroup(evt) {
-	send_action('end_regroup');
-}
-
-function on_button_end_retreat(evt) {
-	send_action('end_retreat');
-}
-
-function on_button_eliminate(evt) {
-	send_action('eliminate');
-}
-
-function on_button_treachery(evt) {
-	send_action('treachery');
-}
-
-function on_button_execute_clarence(evt) {
-	send_action('execute_clarence');
-}
-
-function on_button_execute_exeter(evt) {
-	send_action('execute_exeter');
-}
-
 function build_battle_button(menu, b, c, click, enter, img_src) {
 	let img = new Image();
 	img.draggable = false;
@@ -780,21 +732,21 @@ function update_battle() {
 }
 
 function on_update() {
-	show_action_button("#undo_button", "undo");
-	show_action_button("#pass_button", "pass");
-	show_action_button("#end_action_phase_button", "end_action_phase");
-	show_action_button("#end_supply_phase_button", "end_supply_phase");
-	show_action_button("#end_political_turn_button", "end_political_turn");
-	show_action_button("#end_exile_limits_button", "end_exile_limits");
-	show_action_button("#end_regroup_button", "end_regroup");
-	show_action_button("#end_retreat_button", "end_retreat");
-	show_action_button("#eliminate_button", "eliminate");
-	show_action_button("#execute_clarence_button", "execute_clarence");
-	show_action_button("#execute_exeter_button", "execute_exeter");
-
 	let king = block_owner(game.king);
 	document.getElementById("lancaster_vp").textContent = (king === LANCASTER ? KING_TEXT : PRETENDER_TEXT);
 	document.getElementById("york_vp").textContent = (king === YORK ? KING_TEXT : PRETENDER_TEXT);
+
+	action_button("eliminate", "Eliminate");
+	action_button("execute_clarence", "Execute Clarence");
+	action_button("execute_exeter", "Execute Exeter");
+	action_button("end_action_phase", "End action phase");
+	action_button("end_supply_phase", "End supply phase");
+	action_button("end_political_turn", "End political turn");
+	action_button("end_exile_limits", "End exile limits");
+	action_button("end_regroup", "End regroup");
+	action_button("end_retreat", "End retreat");
+	action_button("pass", "Pass");
+	action_button("undo", "Undo");
 
 	update_cards();
 	update_map();
@@ -812,7 +764,7 @@ function on_update() {
 build_map();
 
 drag_element_with_mouse("#battle", "#battle_header");
-scroll_with_middle_mouse("#grid_center", 2);
+scroll_with_middle_mouse("main", 2);
 init_map_zoom();
 init_shift_zoom();
 init_client(["Lancaster", "York"]);
