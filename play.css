@@ -21,6 +21,13 @@ header.your_turn { background-color: orange; }
 	width: 180px;
 	height: 280px;
 	border-radius: 12px;
+	box-shadow: 1px 1px 5px rgba(0,0,0,0.5);
+	transition: 100ms;
+	display: none;
+}
+
+.card.show {
+	display: block;
 }
 
 .card.enabled:hover {
@@ -28,17 +35,18 @@ header.your_turn { background-color: orange; }
 }
 
 .role_info { padding: 15px; }
-.small_card { width: 90px; height: 140px; border-radius: 5px; }
-.small_card:hover { width: 180px; height: 280px; border-radius: 10px; }
+.role_info .card { margin: 0 auto; }
+.role_info .card { width: 90px; height: 140px; border-radius: 5px; }
+.role_info .card:hover { width: 180px; height: 280px; border-radius: 10px; }
 
 @media (max-height: 800px) {
 	.role_info { padding: 15px 0 0 0; }
-	.small_card { width: 180px; height: 80px; border-radius: 10px 10px 0 0; }
-	.small_card:hover { width: 180px; height: 280px; border-radius: 10px; margin-bottom: 15px; }
+	.role_info .card { width: 180px; height: 80px; border-radius: 10px 10px 0 0; }
+	.role_info .card:hover { width: 180px; height: 280px; border-radius: 10px; margin-bottom: 15px; }
 }
 
 @media (min-height: 1200px) {
-	.small_card { width: 180px; height: 280px; border-radius: 10px; }
+	.role_info .card { width: 180px; height: 280px; border-radius: 10px; }
 }
 
 /* MAP */

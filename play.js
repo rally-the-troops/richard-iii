@@ -634,13 +634,13 @@ function update_cards() {
 	}
 
 	if (!game.l_card)
-		document.getElementById("lancaster_card").className = "small_card card_back";
+		document.getElementById("lancaster_card").className = "show card card_back";
 	else
-		document.getElementById("lancaster_card").className = "small_card " + CARDS[game.l_card].image;
+		document.getElementById("lancaster_card").className = "show card " + CARDS[game.l_card].image;
 	if (!game.y_card)
-		document.getElementById("york_card").className = "small_card card_back";
+		document.getElementById("york_card").className = "show card card_back";
 	else
-		document.getElementById("york_card").className = "small_card " + CARDS[game.y_card].image;
+		document.getElementById("york_card").className = "show card " + CARDS[game.y_card].image;
 }
 
 function update_battle() {
