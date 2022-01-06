@@ -2,8 +2,8 @@ main { background-color: #788; }
 #roles { background-color: silver; }
 header { background-color: silver; }
 header.your_turn { background-color: orange; }
-.one .role_name { background-color: salmon; }
-.two .role_name { background-color: ghostwhite; }
+#role_Lancaster .role_name { background-color: salmon; }
+#role_York .role_name { background-color: ghostwhite; }
 #turn_info { background-color: gainsboro; }
 
 #log { background-color: ghostwhite; }

@@ -52,8 +52,7 @@ let ui = {
 	cards: {},
 	card_backs: {},
 	areas: {},
-	known: {},
-	secret: { Lancaster: {}, York: {}, Rebel: {} },
+	blocks: {},
 	battle_menu: {},
 	battle_block: {},
 	present: new Set(),
@@ -85,6 +84,10 @@ create_log_entry = function (text) {
 
 	p.innerHTML = text;
 	return p;
+}
+
+function is_known_block(b) {
+	return view.game_over || block_owner(b) === player;
 }
 
 function on_focus_area(evt) {
@@ -124,40 +127,34 @@ function block_name(who) {
 
 function block_owner(who) {
 	if (who === REBEL) {
-		if (game.pretender)
-			return BLOCKS[game.pretender].owner;
-		if (game.king)
-			return ENEMY[BLOCKS[game.king].owner];
+		if (view.pretender)
+			return BLOCKS[view.pretender].owner;
+		if (view.king)
+			return ENEMY[BLOCKS[view.king].owner];
 		return YORK;
 	}
 	return BLOCKS[who].owner;
 }
 
-function on_focus_secret_block(evt) {
-	let owner = evt.target.owner;
-	let text = owner;
-	document.getElementById("status").textContent = text;
-}
-
-function on_blur_secret_block(evt) {
-	document.getElementById("status").textContent = "";
-}
-
-function on_click_secret_block(evt) {
-}
-
 function on_focus_map_block(evt) {
 	let b = evt.target.block;
-	let s = game.known[b][1];
-	let text = block_name(b) + " ";
-	if (BLOCKS[b].type === 'heir')
-		text += "H" + HEIR_TEXT[BLOCKS[b].heir] + "-";
-	if (BLOCKS[b].loyalty)
-		text += BLOCKS[b].loyalty + "-";
-	else if (BLOCKS[b].type === 'nobles')
-		text += "\u2740-";
-	text += STEP_TEXT[s] + "-" + BLOCKS[b].combat;
-	document.getElementById("status").textContent = text;
+	if (is_known_block(b)) {
+		let s = BLOCKS[b].steps;
+		let text = block_name(b) + " ";
+		if (BLOCKS[b].type === 'heir')
+			text += "H" + HEIR_TEXT[BLOCKS[b].heir] + "-";
+		if (BLOCKS[b].loyalty)
+			text += BLOCKS[b].loyalty + "-";
+		else if (BLOCKS[b].type === 'nobles')
+			text += "\u2740-";
+		text += STEP_TEXT[s] + "-" + BLOCKS[b].combat;
+		document.getElementById("status").textContent = text;
+	} else {
+		let owner = block_owner(b);
+		if (b === REBEL)
+			owner = "Rebel";
+		document.getElementById("status").textContent = owner;
+	}
 }
 
 function on_blur_map_block(evt) {
@@ -166,7 +163,7 @@ function on_blur_map_block(evt) {
 
 function on_click_map_block(evt) {
 	let b = evt.target.block;
-	if (!game.battle)
+	if (!view.battle)
 		send_action('block', b);
 }
 
@@ -180,20 +177,20 @@ function is_battle_reserve(who, list) {
 function on_focus_battle_block(evt) {
 	let b = evt.target.block;
 	let msg = block_name(b);
-	if (is_battle_reserve(b, game.battle.LR))
+	if (is_battle_reserve(b, view.battle.LR))
 		msg = "Lancaster Reserve";
-	if (is_battle_reserve(b, game.battle.YR))
+	if (is_battle_reserve(b, view.battle.YR))
 		msg = "York Reserve";
 
-	if (game.actions && game.actions.battle_fire && game.actions.battle_fire.includes(b))
+	if (view.actions && view.actions.battle_fire && view.actions.battle_fire.includes(b))
 		msg = "Fire with " + msg;
-	else if (game.actions && game.actions.battle_retreat && game.actions.battle_retreat.includes(b))
+	else if (view.actions && view.actions.battle_retreat && view.actions.battle_retreat.includes(b))
 		msg = "Retreat with " + msg;
-	else if (game.actions && game.actions.battle_charge && game.actions.battle_charge.includes(b))
+	else if (view.actions && view.actions.battle_charge && view.actions.battle_charge.includes(b))
 		msg = "Charge " + msg;
-	else if (game.actions && game.actions.battle_treachery && game.actions.battle_treachery.includes(b))
+	else if (view.actions && view.actions.battle_treachery && view.actions.battle_treachery.includes(b))
 		msg = "Attempt treachery on " + msg;
-	else if (game.actions && game.actions.battle_hit && game.actions.battle_hit.includes(b))
+	else if (view.actions && view.actions.battle_hit && view.actions.battle_hit.includes(b))
 		msg = "Take hit on " + msg;
 
 	document.getElementById("status").textContent = msg;
@@ -229,7 +226,7 @@ function on_focus_battle_hit(evt) {
 }
 
 function on_focus_battle_charge(evt) {
-	if (block_owner(evt.target.block) === game.active)
+	if (block_owner(evt.target.block) === view.active)
 		document.getElementById("status").textContent =
 			"Charge with " + block_name(evt.target.block);
 	else
@@ -238,7 +235,7 @@ function on_focus_battle_charge(evt) {
 }
 
 function on_focus_battle_treachery(evt) {
-	if (block_owner(evt.target.block) === game.active)
+	if (block_owner(evt.target.block) === view.active)
 		document.getElementById("status").textContent =
 			"Attempt treachery with " + block_name(evt.target.block);
 	else
@@ -323,7 +320,7 @@ function build_battle_block(b, block) {
 	ui.battle_menu[b] = menu;
 }
 
-function build_known_block(b, block) {
+function build_map_block(b, block) {
 	let element = document.createElement("div");
 	element.classList.add("block");
 	element.classList.add("known");
@@ -333,19 +330,7 @@ function build_known_block(b, block) {
 	element.addEventListener("mouseleave", on_blur_map_block);
 	element.addEventListener("click", on_click_map_block);
 	element.block = b;
-	return element;
-}
-
-function build_secret_block(b, block) {
-	let element = document.createElement("div");
-	element.classList.add("block");
-	element.classList.add("secret");
-	element.classList.add(BLOCKS[b].owner);
-	element.addEventListener("mouseenter", on_focus_secret_block);
-	element.addEventListener("mouseleave", on_blur_secret_block);
-	element.addEventListener("click", on_click_secret_block);
-	element.owner = BLOCKS[b].owner;
-	return element;
+	ui.blocks[b] = element;
 }
 
 function build_map() {
@@ -372,19 +357,12 @@ function build_map() {
 			element.addEventListener("click", on_click_area);
 			ui.areas[name] = element;
 		}
-		ui.secret.Lancaster[name] = [];
-		ui.secret.York[name] = [];
-		ui.secret.Rebel[name] = [];
 	}
-	ui.secret.Lancaster.offmap = [];
-	ui.secret.York.offmap = [];
-	ui.secret.Rebel.offmap = [];
 
 	for (let b in BLOCKS) {
 		let block = BLOCKS[b];
 		build_battle_block(b, block);
-		ui.known[b] = build_known_block(b, block);
-		ui.secret[BLOCKS[b].owner].offmap.push(build_secret_block(b, block));
+		build_map_block(b, block);
 	}
 }
 
@@ -477,101 +455,37 @@ function update_map() {
 	let layout = {};
 
 	document.getElementById("turn_info").textContent =
-		"Campaign " + game.campaign +
-		"\nKing: " + block_name(game.king) +
-		"\nPretender: " + block_name(game.pretender);
+		"Campaign " + view.campaign +
+		"\nKing: " + block_name(view.king) +
+		"\nPretender: " + block_name(view.pretender);
 
 	for (let area in AREAS)
 		layout[area] = { Lancaster: [], York: [] };
 
-	// Move secret blocks to overflow queue if there are too many in a area
-	for (let area in AREAS) {
-		for (let color of [LANCASTER, YORK, REBEL]) {
-			if (game.secret[color]) {
-				let max = game.secret[color][area] ? game.secret[color][area][0] : 0;
-				while (ui.secret[color][area].length > max) {
-					overflow[color].push(ui.secret[color][area].pop());
-				}
+	for (let b in view.location) {
+		let info = BLOCKS[b];
+		let element = ui.blocks[b];
+		let area = view.location[b];
+		if (area in AREAS) {
+			let moved = view.moved[b] ? " moved" : "";
+			if (is_known_block(b)) {
+				let image = " block_" + info.image;
+				let steps = " r" + (info.steps - view.steps[b]);
+				let known = " known";
+				element.classList = info.owner + known + " block" + image + steps + moved;
+			} else {
+				element.classList = info.owner + " block" + moved;
 			}
-		}
-	}
-
-	// Add secret blocks if there are too few in a location
-	for (let area in AREAS) {
-		for (let color of [LANCASTER, YORK, REBEL]) {
-			if (game.secret[color]) {
-				let max = game.secret[color][area] ? game.secret[color][area][0] : 0;
-				while (ui.secret[color][area].length < max) {
-					if (overflow[color].length > 0) {
-						ui.secret[color][area].push(overflow[color].pop());
-					} else {
-						let element = ui.secret[color].offmap.pop();
-						show_block(element);
-						ui.secret[color][area].push(element);
-					}
-				}
-			}
-		}
-	}
-
-	// Remove any blocks left in the overflow queue
-	for (let color of [LANCASTER, YORK, REBEL]) {
-		while (overflow[color].length > 0) {
-			let element = overflow[color].pop();
-			hide_block(element);
-			ui.secret[color].offmap.push(element);
-		}
-	}
-
-	// Hide formerly known blocks
-	for (let b in BLOCKS) {
-		if (!(b in game.known)) {
-			hide_block(ui.known[b]);
-		}
-	}
-
-	// Add secret blocks to layout
-	for (let area in AREAS) {
-		for (let color of [LANCASTER, YORK, REBEL]) {
-			let i = 0, n = 0, m = 0;
-			if (game.secret[color] && game.secret[color][area]) {
-				n = game.secret[color][area][0];
-				m = game.secret[color][area][1];
-			}
-			for (let element of ui.secret[color][area]) {
-				if (i++ < n - m)
-					element.classList.remove("moved");
-				else
-					element.classList.add("moved");
-				if (color === REBEL)
-					layout[area][BLOCKS[game.pretender].owner].push(element);
-				else
-					layout[area][color].push(element);
-			}
-		}
-	}
-
-	// Add known blocks to layout
-	for (let b in game.known) {
-		let area = game.known[b][0];
-		if (area) {
-			let steps = game.known[b][1];
-			let moved = game.known[b][2];
-			let element = ui.known[b];
-			let color = block_owner(b);
-
-			show_block(element);
-			layout[area][color].push(element);
-			update_steps(b, steps, element);
-
-			if (moved)
-				element.classList.add("moved");
+			if (block_owner(b) === LANCASTER)
+				layout[area].Lancaster.push(element);
 			else
-				element.classList.remove("moved");
+				layout[area].York.push(element);
+			show_block(element);
+		} else {
+			hide_block(element);
 		}
 	}
 
-	// Layout blocks on map
 	for (let area in AREAS) {
 		if (area === POOL) {
 			layout_blocks("LPool", layout[area].Lancaster, []);
@@ -590,27 +504,27 @@ function update_map() {
 			ui.areas[where].classList.remove('where');
 		}
 	}
-	if (game.actions && game.actions.area)
-		for (let where of game.actions.area)
+	if (view.actions && view.actions.area)
+		for (let where of view.actions.area)
 			ui.areas[where].classList.add('highlight');
-	if (game.where)
-		ui.areas[game.where].classList.add('where');
+	if (view.where)
+		ui.areas[view.where].classList.add('where');
 
 	for (let b in BLOCKS) {
-		ui.known[b].classList.remove('highlight');
-		ui.known[b].classList.remove('selected');
+		ui.blocks[b].classList.remove('highlight');
+		ui.blocks[b].classList.remove('selected');
 	}
-	if (!game.battle) {
-		if (game.actions && game.actions.block)
-			for (let b of game.actions.block)
-				ui.known[b].classList.add('highlight');
-		if (game.who)
-			ui.known[game.who].classList.add('selected');
+	if (!view.battle) {
+		if (view.actions && view.actions.block)
+			for (let b of view.actions.block)
+				ui.blocks[b].classList.add('highlight');
+		if (view.who)
+			ui.blocks[view.who].classList.add('selected');
 	}
 }
 
 function update_cards() {
-	let cards = game.hand;
+	let cards = view.hand;
 	for (let c = 1; c <= 25; ++c) {
 		ui.cards[c].classList.remove('enabled');
 		if (cards && cards.includes(c))
@@ -619,28 +533,26 @@ function update_cards() {
 			ui.cards[c].classList.remove('show');
 	}
 
-	if (player === 'Observer') {
-		let n = game.hand.length;
-		for (let c = 1; c <= 7; ++c)
-			if (c <= n)
-				ui.card_backs[c].classList.add("show");
-			else
-				ui.card_backs[c].classList.remove("show");
-	}
+	let n = view.hand.length;
+	for (let c = 1; c <= 7; ++c)
+		if (c <= n && player === 'Observer')
+			ui.card_backs[c].classList.add("show");
+		else
+			ui.card_backs[c].classList.remove("show");
 
-	if (game.actions && game.actions.play) {
-		for (let c of game.actions.play)
+	if (view.actions && view.actions.play) {
+		for (let c of view.actions.play)
 			ui.cards[c].classList.add('enabled');
 	}
 
-	if (!game.l_card)
+	if (!view.l_card)
 		document.getElementById("lancaster_card").className = "show card card_back";
 	else
-		document.getElementById("lancaster_card").className = "show card " + CARDS[game.l_card].image;
-	if (!game.y_card)
+		document.getElementById("lancaster_card").className = "show card " + CARDS[view.l_card].image;
+	if (!view.y_card)
 		document.getElementById("york_card").className = "show card card_back";
 	else
-		document.getElementById("york_card").className = "show card " + CARDS[game.y_card].image;
+		document.getElementById("york_card").className = "show card " + CARDS[view.y_card].image;
 }
 
 function update_battle() {
@@ -649,10 +561,10 @@ function update_battle() {
 
 		ui.present.clear();
 
-		for (let [block, steps, moved] of list) {
+		for (let block of list) {
 			ui.present.add(block);
 
-			if (block === game.who)
+			if (block === view.who)
 				ui.battle_block[block].classList.add("selected");
 			else
 				ui.battle_block[block].classList.remove("selected");
@@ -665,27 +577,27 @@ function update_battle() {
 			ui.battle_menu[block].classList.remove('charge');
 			ui.battle_menu[block].classList.remove('treachery');
 
-			if (game.actions && game.actions.block && game.actions.block.includes(block))
+			if (view.actions && view.actions.block && view.actions.block.includes(block))
 				ui.battle_block[block].classList.add("highlight");
-			if (game.actions && game.actions.battle_fire && game.actions.battle_fire.includes(block))
+			if (view.actions && view.actions.battle_fire && view.actions.battle_fire.includes(block))
 				ui.battle_menu[block].classList.add('fire');
-			if (game.actions && game.actions.battle_retreat && game.actions.battle_retreat.includes(block))
+			if (view.actions && view.actions.battle_retreat && view.actions.battle_retreat.includes(block))
 				ui.battle_menu[block].classList.add('retreat');
-			if (game.actions && game.actions.battle_pass && game.actions.battle_pass.includes(block))
+			if (view.actions && view.actions.battle_pass && view.actions.battle_pass.includes(block))
 				ui.battle_menu[block].classList.add('pass');
-			if (game.actions && game.actions.battle_hit && game.actions.battle_hit.includes(block))
+			if (view.actions && view.actions.battle_hit && view.actions.battle_hit.includes(block))
 				ui.battle_menu[block].classList.add('hit');
-			if (game.actions && game.actions.battle_charge && game.actions.battle_charge.includes(block))
+			if (view.actions && view.actions.battle_charge && view.actions.battle_charge.includes(block))
 				ui.battle_menu[block].classList.add('charge');
-			if (game.actions && game.actions.battle_treachery && game.actions.battle_treachery.includes(block))
+			if (view.actions && view.actions.battle_treachery && view.actions.battle_treachery.includes(block))
 				ui.battle_menu[block].classList.add('treachery');
 
-			update_steps(block, steps, ui.battle_block[block], false);
+			update_steps(block, view.steps[block], ui.battle_block[block]);
 			if (reserve)
 				ui.battle_block[block].classList.add("secret");
 			else
 				ui.battle_block[block].classList.remove("secret");
-			if (moved)
+			if (view.moved[block])
 				ui.battle_block[block].classList.add("moved");
 			else
 				ui.battle_block[block].classList.remove("moved");
@@ -707,32 +619,32 @@ function update_battle() {
 	}
 
 	if (player === LANCASTER) {
-		fill_cell("FR", game.battle.LR, true);
-		fill_cell("FA", game.battle.LA, false);
-		fill_cell("FB", game.battle.LB, false);
-		fill_cell("FC", game.battle.LC, false);
-		fill_cell("FD", game.battle.LD, false);
-		fill_cell("EA", game.battle.YA, false);
-		fill_cell("EB", game.battle.YB, false);
-		fill_cell("EC", game.battle.YC, false);
-		fill_cell("ED", game.battle.YD, false);
-		fill_cell("ER", game.battle.YR, true);
+		fill_cell("FR", view.battle.LR, true);
+		fill_cell("FA", view.battle.LA, false);
+		fill_cell("FB", view.battle.LB, false);
+		fill_cell("FC", view.battle.LC, false);
+		fill_cell("FD", view.battle.LD, false);
+		fill_cell("EA", view.battle.YA, false);
+		fill_cell("EB", view.battle.YB, false);
+		fill_cell("EC", view.battle.YC, false);
+		fill_cell("ED", view.battle.YD, false);
+		fill_cell("ER", view.battle.YR, true);
 	} else {
-		fill_cell("ER", game.battle.LR, true);
-		fill_cell("EA", game.battle.LA, false);
-		fill_cell("EB", game.battle.LB, false);
-		fill_cell("EC", game.battle.LC, false);
-		fill_cell("ED", game.battle.LD, false);
-		fill_cell("FA", game.battle.YA, false);
-		fill_cell("FB", game.battle.YB, false);
-		fill_cell("FC", game.battle.YC, false);
-		fill_cell("FD", game.battle.YD, false);
-		fill_cell("FR", game.battle.YR, true);
+		fill_cell("ER", view.battle.LR, true);
+		fill_cell("EA", view.battle.LA, false);
+		fill_cell("EB", view.battle.LB, false);
+		fill_cell("EC", view.battle.LC, false);
+		fill_cell("ED", view.battle.LD, false);
+		fill_cell("FA", view.battle.YA, false);
+		fill_cell("FB", view.battle.YB, false);
+		fill_cell("FC", view.battle.YC, false);
+		fill_cell("FD", view.battle.YD, false);
+		fill_cell("FR", view.battle.YR, true);
 	}
 }
 
 function on_update() {
-	let king = block_owner(game.king);
+	let king = block_owner(view.king);
 	document.getElementById("lancaster_vp").textContent = (king === LANCASTER ? KING_TEXT : PRETENDER_TEXT);
 	document.getElementById("york_vp").textContent = (king === YORK ? KING_TEXT : PRETENDER_TEXT);
 
@@ -751,9 +663,9 @@ function on_update() {
 	update_cards();
 	update_map();
 
-	if (game.battle) {
-		document.getElementById("battle_header").textContent = game.battle.title;
-		document.getElementById("battle_message").textContent = game.battle.flash;
+	if (view.battle) {
+		document.getElementById("battle_header").textContent = view.battle.title;
+		document.getElementById("battle_message").textContent = view.battle.flash;
 		document.getElementById("battle").classList.add("show");
 		update_battle();
 	} else {
@@ -765,6 +677,3 @@ build_map();
 
 drag_element_with_mouse("#battle", "#battle_header");
 scroll_with_middle_mouse("main", 2);
-init_map_zoom();
-init_shift_zoom();
-init_client(["Lancaster", "York"]);

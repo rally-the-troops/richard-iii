@@ -6,11 +6,10 @@
 <title>RICHARD III</title>
 <link rel="icon" href="icons/Red_Rose_Badge_of_Lancaster.svg">
 <link rel="stylesheet" href="/fonts/fonts.css">
-<link rel="stylesheet" href="/common/grid.css">
-<link rel="stylesheet" href="/common/battle_abc.css">
+<link rel="stylesheet" href="/common/play.css">
+<link rel="stylesheet" href="/common/columbia.css">
 <link rel="stylesheet" href="play.css">
-<script defer src="/socket.io/socket.io.min.js"></script>
-<script defer src="/common/client.js"></script>
+<script defer src="/common/play.js"></script>
 <script defer src="data.js"></script>
 <script defer src="play.js"></script>
 </head>
@@ -62,7 +61,7 @@
 
 <aside>
 	<div id="roles">
-		<div class="role one">
+		<div class="role" id="role_Lancaster">
 			<div class="role_name">
 				Lancaster
 				<div class="role_vp" id="lancaster_vp"></div>
@@ -70,7 +69,7 @@
 			</div>
 			<div class="role_info"><div class="show card card_back" id="lancaster_card"></div></div>
 		</div>
-		<div class="role two">
+		<div class="role" id="role_York">
 			<div class="role_name">
 				York
 				<div class="role_vp" id="york_vp"></div>
