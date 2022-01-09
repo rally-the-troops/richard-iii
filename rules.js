@@ -1531,15 +1531,36 @@ states.plague_event = {
 	},
 	area: function (where) {
 		log("Plague ravages " + has_city(where) + "!");
-		for (let b in BLOCKS) {
+		game.where = where;
+		game.plague = [];
+		for (let b in BLOCKS)
 			if (game.location[b] === where)
-				reduce_block(b);
-		}
-		end_player_turn();
+				game.plague.push(b);
+		game.active = game.p2;
+		game.state = 'apply_plague';
 	},
 	pass: function () {
 		end_player_turn();
 	}
+}
+
+states.apply_plague = {
+	prompt: function (view, current) {
+		if (is_inactive_player(current))
+			return view.prompt = "Plague: Waiting for " + game.active + " to reduce blocks in " + has_city(game.where) + ".";
+		view.prompt = "Plague: Reduce blocks in " + has_city(game.where) + ".";
+		for (let b of game.plague)
+			gen_action(view, 'block', b);
+	},
+	block: function (b) {
+		reduce_block(b);
+		remove_from_array(game.plague, b);
+		if (game.plague.length === 0) {
+			delete game.plague;
+			game.active = game.p1;
+			end_player_turn();
+		}
+	},
 }
 
 function goto_muster_event() {
