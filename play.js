@@ -87,7 +87,9 @@ create_log_entry = function (text) {
 }
 
 function is_known_block(b) {
-	return view.game_over || block_owner(b) === player;
+	if (view.game_over && player === 'Observer')
+		return true;
+	return block_owner(b) === player;
 }
 
 function on_focus_area(evt) {
