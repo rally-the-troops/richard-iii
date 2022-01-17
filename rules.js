@@ -1536,7 +1536,7 @@ states.plague_event = {
 		for (let b in BLOCKS)
 			if (game.location[b] === where)
 				game.plague.push(b);
-		game.active = game.p2;
+		game.active = ENEMY[game.active];
 		game.state = 'apply_plague';
 	},
 	pass: function () {
@@ -1557,7 +1557,7 @@ states.apply_plague = {
 		remove_from_array(game.plague, b);
 		if (game.plague.length === 0) {
 			delete game.plague;
-			game.active = game.p1;
+			game.active = ENEMY[game.active];
 			end_player_turn();
 		}
 	},
