@@ -2496,6 +2496,7 @@ function apply_hit(who) {
 		game.flash = block_name(who) + " takes " + n + " hit.";
 	else
 		game.flash = block_name(who) + " takes " + n + " hits.";
+	log_battle(game.flash);
 	while (n-- > 0) {
 		reduce_block(who);
 		game.hits--;
