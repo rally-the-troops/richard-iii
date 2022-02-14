@@ -11,6 +11,8 @@ exports.scenarios = [
 	"Richard III",
 ];
 
+exports.roles = [ "York", "Lancaster" ];
+
 const { CARDS, BLOCKS, AREAS, BORDERS } = require('./data');
 
 delete AREAS.LPool;
