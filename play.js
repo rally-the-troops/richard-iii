@@ -6,6 +6,7 @@ const REBEL = "Rebel";
 const ENEMY = { York: "Lancaster", Lancaster: "York" }
 
 const POOL = "Pool";
+const DEAD = "Dead";
 const MINOR = "Minor";
 
 const KING_TEXT = "\u2756";
@@ -452,6 +453,23 @@ function hide_block(element) {
 		ui.offmap_element.appendChild(element);
 }
 
+function is_dead(who) {
+	return view.location[who] === null;
+}
+
+function is_perma_dead(who) {
+	if (BLOCKS[who].loyalty === undefined)
+		return true;
+	switch (who) {
+	case "Warwick/Y": return is_dead("Warwick/L") && is_dead("Warwick/Y");
+	case "Kent/Y": return is_dead("Kent/L") && is_dead("Kent/Y");
+	case "Salisbury/Y": return is_dead("Salisbury/L") && is_dead("Salisbury/Y");
+	case "Clarence/Y": return is_dead("Clarence/L") && is_dead("Clarence/Y");
+	case "Exeter/L": return is_dead("Exeter/L") && is_dead("Exeter/Y");
+	}
+	return false;
+}
+
 function update_map() {
 	let overflow = { Lancaster: [], York: [], Rebel: [] };
 	let layout = {};
@@ -461,6 +479,7 @@ function update_map() {
 		"\nKing: " + block_name(view.king) +
 		"\nPretender: " + block_name(view.pretender);
 
+	layout[DEAD] = { Lancaster: [], York: [] };
 	for (let area in AREAS)
 		layout[area] = { Lancaster: [], York: [] };
 
@@ -468,13 +487,22 @@ function update_map() {
 		let info = BLOCKS[b];
 		let element = ui.blocks[b];
 		let area = view.location[b];
-		if (area in AREAS) {
-			let moved = view.moved[b] ? " moved" : "";
-			if (is_known_block(b)) {
-				let image = " block_" + info.image;
-				let steps = " r" + (info.steps - view.steps[b]);
-				let known = " known";
-				element.classList = info.owner + known + " block" + image + steps + moved;
+		let moved = view.moved[b] ? " moved" : "";
+		let image = " block_" + info.image;
+		let steps = " r" + (info.steps - view.steps[b]);
+		let known = is_known_block(b);
+
+		// perma-dead nobles
+		if (area === null && is_perma_dead(b)) {
+			area = DEAD;
+			moved = " moved";
+			known = 1;
+			steps = "";
+		}
+
+		if (area !== null) {
+			if (known) {
+				element.classList = info.owner + " known block" + image + steps + moved;
 			} else {
 				element.classList = info.owner + " block" + moved;
 			}
@@ -490,8 +518,8 @@ function update_map() {
 
 	for (let area in AREAS) {
 		if (area === POOL) {
-			layout_blocks("LPool", layout[area].Lancaster, []);
-			layout_blocks("YPool", layout[area].York, []);
+			layout_blocks("LPool", layout[POOL].Lancaster, layout[DEAD].Lancaster);
+			layout_blocks("YPool", layout[POOL].York, layout[DEAD].York);
 		} else if (area === MINOR) {
 			layout_blocks("LMinor", layout[area].Lancaster, []);
 			layout_blocks("YMinor", layout[area].York, []);
