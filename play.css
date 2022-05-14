@@ -5,8 +5,10 @@ header.your_turn { background-color: orange; }
 #role_Lancaster .role_name { background-color: salmon; }
 #role_York .role_name { background-color: ghostwhite; }
 #turn_info { background-color: gainsboro; }
+.role_vp { float: right; }
 
 #log { background-color: ghostwhite; }
+#log div { padding-left: 20px; text-indent: -12px; }
 #log .st { background-color: steelblue; color: white; font-weight: bold; }
 #log .L { background-color: pink; }
 #log .Y { background-color: gainsboro; }
@@ -14,10 +16,17 @@ header.your_turn { background-color: orange; }
 #log .br { font-style: italic; text-decoration: underline; }
 
 .hand {
+	margin: 25px;
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: 20px;
 	min-height: 300px;
 }
 
 .card {
+	background-size: cover;
+	background-repeat: no-repeat;
 	width: 180px;
 	height: 280px;
 	border-radius: 12px;
@@ -32,6 +41,18 @@ header.your_turn { background-color: orange; }
 
 .card.enabled:hover {
 	transform: scale(1.1);
+}
+
+.card.enabled {
+	cursor: pointer;
+}
+
+.card.disabled {
+	filter: grayscale(100%);
+}
+
+.role_info {
+	overflow: clip; /* clip dropshadow from filter:grayscale() stacking context */
 }
 
 .role_info { padding: 15px; }
