@@ -194,13 +194,7 @@ div.block {
 #battle { background-color: silver; }
 #battle_message { background-color: lightsteelblue; }
 #battle_header { background-color: steelblue; color: white; }
-.battle_separator { background-color: steelblue; }
-
-.battle_reserves > td > div { height: 75px; padding: 5px; }
-.battle_a_cell > div { min-width: 180px; padding: 5px 10px; }
-.battle_b_cell > div { min-width: 180px; padding: 5px 10px; }
-.battle_c_cell > div { min-width: 180px; padding: 5px 10px; }
-.battle_d_cell > div { min-width: 90px; padding: 5px 10px; }
+#FR, #ER { background-color: #acacac; }
 
 /* CARD AND BLOCK IMAGES */
 
@@ -281,3 +275,23 @@ div.block {
 .known.block_95{background-image:url(blocks/block_95.jpg)}
 .known.block_96{background-image:url(blocks/block_96.jpg)}
 .known.block_97{background-image:url(blocks/block_97.jpg)}
+
+/* MOBILE PHONE LAYOUT */
+
+@media (max-width: 640px) {
+	.card {
+		width: 112px !important;
+		height: 175px !important;
+		border-radius: 6px !important;
+	}
+	.role_info {
+		margin: 0 auto !important;
+		padding: 15px 0 !important;
+	}
+	.role_info .card {
+		margin: 0 auto !important;
+	}
+	.hand {
+		min-height: 175px;
+	}
+}

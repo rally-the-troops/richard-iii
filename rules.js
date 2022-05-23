@@ -3351,8 +3351,9 @@ states.game_over = {
 
 function make_battle_view() {
 	let battle = {
-		LA: [], LB: [], LC: [], LD: [], LR: [],
-		YA: [], YB: [], YC: [], YD: [], YR: [],
+		round: game.battle_round,
+		LF: [], LR: [],
+		YF: [], YR: [],
 		flash: game.flash
 	};
 
@@ -3366,16 +3367,9 @@ function make_battle_view() {
 	}
 
 	fill_cell(battle.LR, LANCASTER, b => is_battle_reserve(b));
-	fill_cell(battle.LA, LANCASTER, b => !is_battle_reserve(b) && block_initiative(b) === 'A');
-	fill_cell(battle.LB, LANCASTER, b => !is_battle_reserve(b) && block_initiative(b) === 'B');
-	fill_cell(battle.LC, LANCASTER, b => !is_battle_reserve(b) && block_initiative(b) === 'C');
-	fill_cell(battle.LD, LANCASTER, b => !is_battle_reserve(b) && block_initiative(b) === 'D');
-
+	fill_cell(battle.LF, LANCASTER, b => !is_battle_reserve(b));
 	fill_cell(battle.YR, YORK, b => is_battle_reserve(b));
-	fill_cell(battle.YA, YORK, b => !is_battle_reserve(b) && block_initiative(b) === 'A');
-	fill_cell(battle.YB, YORK, b => !is_battle_reserve(b) && block_initiative(b) === 'B');
-	fill_cell(battle.YC, YORK, b => !is_battle_reserve(b) && block_initiative(b) === 'C');
-	fill_cell(battle.YD, YORK, b => !is_battle_reserve(b) && block_initiative(b) === 'D');
+	fill_cell(battle.YF, YORK, b => !is_battle_reserve(b));
 
 	return battle;
 }

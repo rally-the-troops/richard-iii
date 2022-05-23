@@ -172,19 +172,12 @@ function on_click_map_block(evt) {
 		send_action('block', b);
 }
 
-function is_battle_reserve(who, list) {
-	for (let [b, s, m] of list)
-		if (who === b)
-			return true;
-	return false;
-}
-
 function on_focus_battle_block(evt) {
 	let b = evt.target.block;
 	let msg = block_name(b);
-	if (is_battle_reserve(b, view.battle.LR))
+	if (view.battle.LR.includes(b))
 		msg = "Lancaster Reserve";
-	if (is_battle_reserve(b, view.battle.YR))
+	if (view.battle.YR.includes(b))
 		msg = "York Reserve";
 
 	if (view.actions && view.actions.battle_fire && view.actions.battle_fire.includes(b))
@@ -322,6 +315,7 @@ function build_battle_block(b, block) {
 	menu.classList.add("battle_menu");
 	menu.appendChild(element);
 	menu.appendChild(menu_list);
+	menu.block = b;
 	ui.battle_menu[b] = menu;
 }
 
@@ -587,6 +581,31 @@ function update_cards() {
 		document.getElementById("york_card").className = "show card " + CARDS[view.y_card].image;
 }
 
+function compare_blocks(a, b) {
+	let aa = BLOCKS[a].combat;
+	let bb = BLOCKS[b].combat;
+	// Bombard
+	if (aa === "D3" && view.battle.round <= 1) aa = "A3";
+	if (bb === "D3" && view.battle.round <= 1) bb = "A3";
+	if (aa === bb)
+		return (a < b) ? -1 : (a > b) ? 1 : 0;
+	return (aa < bb) ? -1 : (aa > bb) ? 1 : 0;
+}
+
+function sort_battle_row(root) {
+	let swapped;
+	let children = root.children;
+	do {
+		swapped = false;
+		for (let i = 1; i < children.length; ++i) {
+			if (compare_blocks(children[i-1].block, children[i].block) > 0) {
+				children[i].after(children[i-1]);
+				swapped = true;
+			}
+		}
+	} while (swapped);
+}
+
 function update_battle() {
 	function fill_cell(name, list, reserve) {
 		let cell = window[name];
@@ -595,6 +614,9 @@ function update_battle() {
 
 		for (let block of list) {
 			ui.present.add(block);
+
+			if (!cell.contains(ui.battle_menu[block]))
+				cell.appendChild(ui.battle_menu[block]);
 
 			if (block === view.who)
 				ui.battle_block[block].classList.add("selected");
@@ -640,37 +662,24 @@ function update_battle() {
 		}
 
 		for (let b in BLOCKS) {
-			if (ui.present.has(b)) {
-				if (!cell.contains(ui.battle_menu[b]))
-					cell.appendChild(ui.battle_menu[b]);
-			} else {
+			if (!ui.present.has(b)) {
 				if (cell.contains(ui.battle_menu[b]))
 					cell.removeChild(ui.battle_menu[b]);
 			}
 		}
+
+		sort_battle_row(cell);
 	}
 
 	if (player === LANCASTER) {
 		fill_cell("FR", view.battle.LR, true);
-		fill_cell("FA", view.battle.LA, false);
-		fill_cell("FB", view.battle.LB, false);
-		fill_cell("FC", view.battle.LC, false);
-		fill_cell("FD", view.battle.LD, false);
-		fill_cell("EA", view.battle.YA, false);
-		fill_cell("EB", view.battle.YB, false);
-		fill_cell("EC", view.battle.YC, false);
-		fill_cell("ED", view.battle.YD, false);
+		fill_cell("FF", view.battle.LF, false);
+		fill_cell("EF", view.battle.YF, false);
 		fill_cell("ER", view.battle.YR, true);
 	} else {
 		fill_cell("ER", view.battle.LR, true);
-		fill_cell("EA", view.battle.LA, false);
-		fill_cell("EB", view.battle.LB, false);
-		fill_cell("EC", view.battle.LC, false);
-		fill_cell("ED", view.battle.LD, false);
-		fill_cell("FA", view.battle.YA, false);
-		fill_cell("FB", view.battle.YB, false);
-		fill_cell("FC", view.battle.YC, false);
-		fill_cell("FD", view.battle.YD, false);
+		fill_cell("EF", view.battle.LF, false);
+		fill_cell("FF", view.battle.YF, false);
 		fill_cell("FR", view.battle.YR, true);
 	}
 }
