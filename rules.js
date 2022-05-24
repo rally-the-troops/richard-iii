@@ -44,18 +44,20 @@ function random(n) {
 	return Math.floor(((game.seed = game.seed * 48271 % 0x7fffffff) / 0x7fffffff) * n);
 }
 
-function log(...args) {
-	let s = Array.from(args).join("");
-	game.log.push(s);
+function logbr() {
+	if (game.log.length > 0 && game.log[game.log.length-1] !== "")
+		game.log.push("");
 }
 
-function log_battle(...args) {
-	let s = Array.from(args).join("");
+function log_battle(s) {
 	game.log.push(game.active[0] + ": " + s);
 }
 
-function logp(...args) {
-	let s = game.active + " " + Array.from(args).join("");
+function logp(s) {
+	game.log.push(game.active + " " + s);
+}
+
+function log(s) {
 	game.log.push(s);
 }
 
@@ -935,20 +937,20 @@ function disband(who) {
 function check_instant_victory() {
 	// Check Clarence/Y and Exeter/L specifically (they're not heirs if converted)
 	if (is_dead("York") && is_dead("March") && is_dead("Rutland") && is_dead("Clarence/Y") && is_dead("Gloucester")) {
-		log("All York heirs are dead!");
-		game.victory = "Lancaster wins by eliminating all enemy heirs!";
+		log("All York heirs were eliminated!");
+		game.victory = "Lancaster won by eliminating all enemy heirs!";
 		game.result = LANCASTER;
 	}
 	if (is_dead("Henry VI") && is_dead("Prince Edward") && is_dead("Exeter/L") && is_dead("Somerset") && is_dead("Richmond")) {
-		log("All Lancaster heirs are dead!");
-		game.victory = "York wins by eliminating all enemy heirs!";
+		log("All Lancaster heirs were eliminated!");
+		game.victory = "York won by eliminating all enemy heirs!";
 		game.result = YORK;
 	}
 }
 
 function eliminate_block(who) {
-	log(block_name(who) + " is eliminated.");
-	game.flash += " " + block_name(who) + " is eliminated.";
+	log(block_name(who) + " eliminated.");
+	game.flash += " " + block_name(who) + " eliminated.";
 	if (who === "Exeter/Y") {
 		game.location[who] = null;
 		++game.killed_heirs[LANCASTER];
@@ -1311,7 +1313,7 @@ function free_henry_vi() {
 	if (game.dead["Henry VI"]) {
 		if ((game.active === LANCASTER && is_friendly_area("Middlesex")) ||
 			(game.active === YORK && is_enemy_area("Middlesex"))) {
-			log("Henry VI is rescued!");
+			log("Henry VI rescued!");
 			delete game.dead["Henry VI"];
 		}
 	}
@@ -1320,7 +1322,7 @@ function free_henry_vi() {
 // GAME TURN
 
 function start_campaign() {
-	log("");
+	logbr();
 	log("Start Campaign " + game.campaign + ".");
 
 	// TODO: Use board game mulligan rules instead of automatically redealing?
@@ -1336,7 +1338,7 @@ function start_campaign() {
 function start_game_turn() {
 	game.turn = 8 - game.l_hand.length;
 
-	log("");
+	logbr();
 	log("Start Turn " + game.turn + " of campaign " + game.campaign + ".");
 
 	// Reset movement and attack tracking state
@@ -1433,9 +1435,9 @@ states.play_card = {
 }
 
 function reveal_cards() {
-	log("");
-	log("Lancaster plays " + CARDS[game.l_card].name + ".");
-	log("York plays " + CARDS[game.y_card].name + ".");
+	logbr();
+	log("Lancaster played " + CARDS[game.l_card].name + ".");
+	log("York played " + CARDS[game.y_card].name + ".");
 	game.show_cards = true;
 
 	let pretender = block_owner(game.pretender);
@@ -1459,7 +1461,7 @@ function reveal_cards() {
 }
 
 function start_player_turn() {
-	log("");
+	logbr();
 	log("Start " + game.active + " turn.");
 	reset_border_limits();
 	let lc = CARDS[game.l_card];
@@ -1532,7 +1534,7 @@ states.plague_event = {
 				gen_action(view, 'area', where);
 	},
 	area: function (where) {
-		log("Plague ravages " + has_city(where) + "!");
+		log("Plague ravaged " + has_city(where) + "!");
 		game.where = where;
 		game.plague = [];
 		for (let b in BLOCKS)
@@ -1591,7 +1593,7 @@ states.muster_event = {
 	},
 	end_action_phase: function () {
 		clear_undo();
-		print_turn_log(game.active + " musters:");
+		print_turn_log(game.active + " mustered:");
 		end_player_turn();
 	},
 	undo: pop_undo,
@@ -1616,7 +1618,7 @@ states.muster_who = {
 	end_action_phase: function () {
 		game.where = null;
 		clear_undo();
-		print_turn_log(game.active + " musters:");
+		print_turn_log(game.active + " mustered:");
 		end_player_turn();
 	},
 	undo: pop_undo,
@@ -1776,13 +1778,13 @@ states.action_phase = {
 	},
 	end_action_phase: function () {
 		if (game.moves > 0 && game.turn_log.length === 0 && game.recruit_log.length === 0)
-			logp("does nothing.");
+			logp("did nothing.");
 
 		if (game.turn_log.length > 0)
-			print_turn_log(game.active + " moves:");
+			print_turn_log(game.active + " moved:");
 		game.turn_log = game.recruit_log;
 		if (game.turn_log.length > 0)
-			print_turn_log(game.active + " recruits:");
+			print_turn_log(game.active + " recruited:");
 		game.turn_log = null;
 		game.recruit_log = null;
 
@@ -1914,7 +1916,7 @@ states.sea_move_to = {
 			game.is_pirate[game.who] = true;
 			if (!game.attacker[to])
 				game.attacker[to] = game.active;
-			logp("sea moves.");
+			logp("sea moved.");
 			--game.moves;
 		} else {
 			// Can sea move two blocks between same major ports for 1 AP.
@@ -1922,7 +1924,7 @@ states.sea_move_to = {
 			if (game.move_port[game.origin] === to) {
 				delete game.move_port[game.origin];
 			} else {
-				logp("sea moves.");
+				logp("sea moved.");
 				--game.moves;
 				if (is_major_port(game.origin) && is_major_port(to))
 					game.move_port[game.origin] = to;
@@ -1939,7 +1941,7 @@ function end_move() {
 	if (game.distance > 0) {
 		log_move_end();
 		if (!game.activated.includes(game.origin)) {
-			logp("activates " + game.origin + ".");
+			logp("activated " + game.origin + ".");
 			game.activated.push(game.origin);
 			game.moves --;
 		}
@@ -1984,7 +1986,7 @@ states.battle_phase = {
 
 function start_battle(where) {
 	game.flash = "";
-	log("");
+	logbr();
 	log("Battle in " + where + ".");
 	game.where = where;
 	game.battle_round = 0;
@@ -2010,7 +2012,7 @@ function resume_battle() {
 
 function end_battle() {
 	if (game.turn_log && game.turn_log.length > 0)
-		print_turn_log("Retreats from " + game.where + ":");
+		print_turn_log("Retreated from " + game.where + ":");
 	free_henry_vi();
 	game.flash = "";
 	game.battle_round = 0;
@@ -2072,7 +2074,7 @@ function bring_on_reserves(owner, moved) {
 function start_battle_round() {
 	if (++game.battle_round <= 4) {
 		if (game.turn_log && game.turn_log.length > 0)
-			print_turn_log("Retreats from " + game.where + ":");
+			print_turn_log("Retreated from " + game.where + ":");
 		game.turn_log = [];
 
 		log("~ Battle Round " + game.battle_round + " ~");
@@ -2103,7 +2105,7 @@ function pump_battle_round() {
 			log("Attacking main force eliminated.");
 			bring_on_reserves(game.attacker[game.where], true);
 		} else if (count_defenders() === 0) {
-			log("Defending main force was eliminated.");
+			log("Defending main force eliminated.");
 			bring_on_reserves(ENEMY[game.attacker[game.where]], true);
 			if (game.battle_round === 1) {
 				log("The attacker is now the defender.");
@@ -2151,7 +2153,7 @@ function pump_battle_round() {
 }
 
 function pass_with_block(b) {
-	game.flash = block_name(b) + " passes.";
+	game.flash = block_name(b) + " passed.";
 	log_battle(game.flash);
 	game.moved[b] = true;
 	resume_battle();
@@ -2210,18 +2212,18 @@ function roll_attack(active, b, verb) {
 
 	game.flash = name + " " + verb + " " + rolls.join(" ") + " ";
 	if (game.hits === 0)
-		game.flash += "and misses.";
+		game.flash += "and missed.";
 	else if (game.hits === 1)
-		game.flash += "and scores 1 hit.";
+		game.flash += "and scored 1 hit.";
 	else
-		game.flash += "and scores " + game.hits + " hits.";
+		game.flash += "and scored " + game.hits + " hits.";
 
 	log(active[0] + ": " + name + " " + verb + " " + rolls.join("") + ".");
 }
 
 function fire_with_block(b) {
 	game.moved[b] = true;
-	roll_attack(game.active, b, "fires");
+	roll_attack(game.active, b, "fired");
 	if (game.hits > 0) {
 		game.active = ENEMY[game.active];
 		goto_battle_hits();
@@ -2253,12 +2255,12 @@ function attempt_treachery(source, target) {
 	else
 		game.flash = "Treason event " + rolls.join(" ");
 	if (result) {
-		game.flash += " converts " + block_name(target) + "!";
+		game.flash += " converted " + block_name(target) + "!";
 		target = swap_blocks(target);
 		game.defected[target] = true;
 		game.reserves.push(target);
 	} else {
-		game.flash += " fails to convert " + block_name(target) + ".";
+		game.flash += " failed to convert " + block_name(target) + ".";
 	}
 	log_battle(game.flash);
 }
@@ -2266,7 +2268,7 @@ function attempt_treachery(source, target) {
 function charge_with_block(heir, target) {
 	let n;
 	game.moved[heir] = true;
-	roll_attack(game.active, heir, "charges " + block_name(target));
+	roll_attack(game.active, heir, "charged " + block_name(target));
 	n = Math.min(game.hits, game.steps[target]);
 	if (n === game.steps[target]) {
 		eliminate_block(target);
@@ -2274,7 +2276,7 @@ function charge_with_block(heir, target) {
 		while (n-- > 0)
 			reduce_block(target);
 		let charge_flash = game.flash;
-		roll_attack(ENEMY[game.active], target, "counter-attacks");
+		roll_attack(ENEMY[game.active], target, "counter-attacked");
 		n = Math.min(game.hits, game.steps[heir]);
 		while (n-- > 0)
 			reduce_block(heir);
@@ -2495,9 +2497,9 @@ function goto_battle_hits() {
 function apply_hit(who) {
 	let n = Math.min(game.hits, game.steps[who]);
 	if (n === 1)
-		game.flash = block_name(who) + " takes " + n + " hit.";
+		game.flash = block_name(who) + " took " + n + " hit.";
 	else
-		game.flash = block_name(who) + " takes " + n + " hits.";
+		game.flash = block_name(who) + " took " + n + " hits.";
 	log_battle(game.flash);
 	while (n-- > 0) {
 		reduce_block(who);
@@ -2571,7 +2573,7 @@ states.retreat_in_battle = {
 			game.location[game.who] = to;
 			game.state = 'sea_retreat_to';
 		} else {
-			game.flash = block_name(game.who) + " retreats.";
+			game.flash = block_name(game.who) + " retreated.";
 			log_battle(game.flash);
 			game.turn_log.push([game.active, to]);
 			use_border(game.where, to);
@@ -2607,7 +2609,7 @@ states.sea_retreat_to = {
 	area: function (to) {
 		let sea = game.location[game.who];
 		game.turn_log.push([game.active, sea, to]);
-		game.flash = block_name(game.who) + " retreats.";
+		game.flash = block_name(game.who) + " retreated.";
 		log_battle(game.flash);
 		game.location[game.who] = to;
 		resume_battle();
@@ -2627,7 +2629,7 @@ function goto_regroup() {
 	game.active = game.attacker[game.where];
 	if (is_enemy_area(game.where))
 		game.active = ENEMY[game.active];
-	log(game.active + " wins the battle in " + game.where + "!");
+	log(game.active + " won the battle in " + game.where + "!");
 	game.state = 'regroup';
 	game.turn_log = [];
 	clear_undo();
@@ -2660,7 +2662,7 @@ states.regroup = {
 	end_regroup: function () {
 		game.where = null;
 		clear_undo();
-		print_turn_log(game.active + " regroups:");
+		print_turn_log(game.active + " regrouped:");
 		goto_battle_phase();
 	},
 	undo: pop_undo,
@@ -2762,7 +2764,7 @@ states.execute_clarence = {
 		gen_action(view, 'pass');
 	},
 	execute_clarence: function () {
-		logp("executes Clarence.");
+		logp("executed Clarence.");
 		eliminate_block("Clarence/L");
 		game.who = null;
 		if (game.result)
@@ -2794,7 +2796,7 @@ states.execute_exeter = {
 		gen_action(view, 'pass');
 	},
 	execute_exeter: function () {
-		logp("executes Exeter.");
+		logp("executed Exeter.");
 		eliminate_block("Exeter/Y");
 		game.who = null;
 		if (game.result)
@@ -2831,8 +2833,8 @@ states.enter_pretender_heir = {
 		game.who = null;
 	},
 	area: function (to) {
-		log("");
-		log(block_name(game.who) + " comes of age in " + to + ".");
+		logbr();
+		log(block_name(game.who) + " came of age in " + to + ".");
 		--game.killed_heirs[game.active];
 		game.location[game.who] = to;
 		game.who = null;
@@ -2876,7 +2878,7 @@ states.supply_limits_pretender = {
 		delete game.supply;
 		delete game.reduced;
 		clear_undo();
-		print_turn_log(game.active + " reduces:");
+		print_turn_log(game.active + " reduced:");
 		if (game.result)
 			return goto_game_over();
 		goto_enter_royal_heir();
@@ -2914,8 +2916,8 @@ states.enter_royal_heir = {
 		game.who = null;
 	},
 	area: function (to) {
-		log("");
-		log(block_name(game.who) + " comes of age in " + to + ".");
+		logbr();
+		log(block_name(game.who) + " came of age in " + to + ".");
 		--game.killed_heirs[game.active];
 		game.location[game.who] = to;
 		game.who = null;
@@ -2963,7 +2965,7 @@ states.supply_limits_king = {
 		delete game.supply;
 		delete game.reduced;
 		clear_undo();
-		print_turn_log(game.active + " reduces:");
+		print_turn_log(game.active + " reduced:");
 		if (game.result)
 			return goto_game_over();
 		end_game_turn();
@@ -2974,9 +2976,9 @@ states.supply_limits_king = {
 // POLITICAL TURN
 
 function goto_political_turn() {
-	log("");
+	logbr();
 	log("Start Political Turn.");
-	log("");
+	logbr();
 
 	game.turn_log = [];
 
@@ -3027,31 +3029,31 @@ function goto_political_turn() {
 		}
 	}
 
-	print_turn_log("Levies disband:");
+	print_turn_log("Levies disbanded:");
 
 	// Usurpation
 	let l_count = count_lancaster_nobles_and_heirs();
 	let y_count = count_york_nobles_and_heirs();
-	log("");
-	log("Lancaster controls " + l_count + " nobles.");
-	log("York controls " + y_count + " nobles.");
+	logbr();
+	log("Lancaster controlled " + l_count + " nobles.");
+	log("York controlled " + y_count + " nobles.");
 	if (l_count > y_count && block_owner(game.king) === YORK) {
 		game.king = find_senior_heir(LANCASTER);
 		game.pretender = find_senior_heir(YORK);
-		log(game.king + " usurps the throne!");
+		log(game.king + " usurped the throne!");
 	} else if (y_count > l_count && block_owner(game.king) === LANCASTER) {
 		game.king = find_senior_heir(YORK);
 		game.pretender = find_senior_heir(LANCASTER);
-		log(game.king + " usurps the throne!");
+		log(game.king + " usurped the throne!");
 	} else {
-		log(game.king + " remains king.");
+		log(game.king + " remained king.");
 	}
 
 	// Game ends after last Usurpation check
 	if (game.campaign === game.end_campaign)
 		return goto_game_over();
 
-	log("");
+	logbr();
 	goto_pretender_goes_home();
 }
 
@@ -3067,7 +3069,7 @@ function goto_pretender_goes_home() {
 			if (go_home_if_possible(b))
 				choices = true;
 	if (!choices) {
-		print_turn_log_no_count("Pretender goes home:");
+		print_turn_log_no_count("Pretender went home:");
 		goto_exile_limits_pretender();
 	} else {
 		clear_undo();
@@ -3120,7 +3122,7 @@ states.pretender_goes_home = {
 	},
 	end_political_turn: function () {
 		clear_undo();
-		print_turn_log_no_count("Pretender goes home:");
+		print_turn_log_no_count("Pretender went home:");
 		goto_exile_limits_pretender();
 	},
 	undo: pop_undo,
@@ -3185,7 +3187,7 @@ states.exile_limits_pretender = {
 	block: function (who) {
 		push_undo();
 		let where = game.location[who];
-		logp("disbands in " + where + ".");
+		logp("disbanded in " + where + ".");
 		game.exiles = game.exiles.filter(b => game.location[b] !== where);
 		disband(who);
 	},
@@ -3207,7 +3209,7 @@ function goto_king_goes_home() {
 			if (go_home_if_possible(b))
 				choices = true;
 	if (!choices) {
-		print_turn_log_no_count("King goes home:");
+		print_turn_log_no_count("King went home:");
 		goto_exile_limits_king();
 	} else {
 		clear_undo();
@@ -3257,7 +3259,7 @@ states.king_goes_home = {
 	},
 	end_political_turn: function () {
 		clear_undo();
-		print_turn_log_no_count("King goes home:");
+		print_turn_log_no_count("King went home:");
 		goto_exile_limits_king();
 	},
 	undo: pop_undo,
@@ -3310,7 +3312,7 @@ states.exile_limits_king = {
 	block: function (who) {
 		push_undo();
 		let where = game.location[who];
-		logp("disbands in " + where + ".");
+		logp("disbanded in " + where + ".");
 		game.exiles = game.exiles.filter(b => game.location[b] !== where);
 		disband(who);
 	},
@@ -3337,9 +3339,9 @@ function goto_game_over() {
 	game.state = 'game_over';
 	if (!game.result) {
 		game.result = block_owner(game.king);
-		game.victory = game.result + " wins!";
+		game.victory = game.result + " won!";
 	}
-	log("");
+	logbr();
 	log(game.victory);
 }
 
@@ -3424,7 +3426,7 @@ exports.action = function (state, current, action, arg) {
 exports.resign = function (state, current) {
 	game = state;
 	if (game.state !== 'game_over') {
-		log("");
+		logbr();
 		log(current + " resigned.");
 		game.active = "None";
 		game.state = 'game_over';

@@ -69,18 +69,22 @@ function on_log(text) {
 
 	text = text.replace(/^([A-Z]):/, '<span class="$1"> $1 </span>');
 
-	if (text.match(/^Scenario: /))
+	if (text.match(/^Scenario: /)) {
 		p.className = 'st', text = text.substring(10);
-	else if (text.match(/^~ .* ~$/))
+	} else if (text.match(/^~ .* ~$/)) {
 		p.className = 'br', text = text.substring(2, text.length-2);
-	else if (text.match(/^Start Lancaster turn/))
+	} else if (text.match(/^Start Lancaster turn/)) {
+		text = "Lancaster";
 		p.className = 'L';
-	else if (text.match(/^Start York turn/))
+	} else if (text.match(/^Start York turn/)) {
+		text = "York";
 		p.className = 'Y';
-	else if (text.match(/^Start /))
+	} else if (text.match(/^Start /)) {
 		p.className = 'st', text = text.replace(/\.$/, "");
-	else if (text.match(/^Battle in/))
+	} else if (text.match(/^Battle in/)) {
+		text = text.substring(0,text.length-1);
 		p.className = 'bs';
+	}
 
 	if (text.match(/^Start /))
 		text = text.substring(6);
