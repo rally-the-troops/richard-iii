@@ -949,8 +949,8 @@ function check_instant_victory() {
 }
 
 function eliminate_block(who) {
-	log(block_name(who) + " eliminated.");
-	game.flash += " " + block_name(who) + " eliminated.";
+	log(block_name(who) + " was eliminated.");
+	game.flash += " " + block_name(who) + " was eliminated.";
 	if (who === "Exeter/Y") {
 		game.location[who] = null;
 		++game.killed_heirs[LANCASTER];
@@ -2102,13 +2102,13 @@ function pump_battle_round() {
 	if (count_attackers() === 0 || count_defenders() === 0) {
 		// Deploy reserves immediately if all blocks on one side are eliminated.
 		if (count_attackers() === 0) {
-			log("Attacking main force eliminated.");
+			log("Attacking main force was eliminated.");
 			bring_on_reserves(game.attacker[game.where], true);
 		} else if (count_defenders() === 0) {
-			log("Defending main force eliminated.");
+			log("Defending main force was eliminated.");
 			bring_on_reserves(ENEMY[game.attacker[game.where]], true);
 			if (game.battle_round === 1) {
-				log("The attacker is now the defender.");
+				log("Battlefield control changed.");
 				game.attacker[game.where] = ENEMY[game.attacker[game.where]];
 			}
 		}
